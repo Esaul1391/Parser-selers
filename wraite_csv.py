@@ -2,7 +2,7 @@ import json
 import csv
 
 # Загрузка данных из JSON
-with open("data_sellers.json", "r", encoding="utf-8") as file:
+with open("data_sellersddd.json", "r", encoding="utf-8") as file:
     data = json.load(file)
 
 # Формирование данных для CSV

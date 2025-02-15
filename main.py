@@ -10,25 +10,31 @@ from string import whitespace
 
 import undetected_chromedriver as uc
 from bs4 import BeautifulSoup
+from selenium import webdriver
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC 
 from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support import expected_conditions as EC
+
 
 min_delay = 1
-max_delay = 6
+max_delay = 2
+
 
 def initialize_browser():
     """Инициализация браузера с одной сессией"""
-    driver = uc.Chrome()
+    driver = uc.Chrome(driver_executable_path=ChromeDriverManager().install())
     driver.implicitly_wait(3)
     return driver
+
 
 def scroll_to_element(driver, element):
     actions = ActionChains(driver)
     actions.move_to_element(element)
     actions.perform()
+
 
 def get_url(driver, url):
     """Открытие URL в переданном браузере"""
@@ -37,7 +43,7 @@ def get_url(driver, url):
 
 
 def get_hash_prof_users():
-    path = '../Parser-selers/date/my_save_prof.txt'
+    path = 'date/my_save_prof.html'
     with open(path, 'r', encoding='utf-8') as file:
         html_content = file.read()
         soup = BeautifulSoup(html_content, 'lxml')
@@ -57,17 +63,31 @@ def extract_item_title(review_text):
         return match.group(1).strip()
     return "Название не найдено"
 
+
 def get_page_user(driver, hash_id):
     url = f'https://www.avito.ru/user/{hash_id}/profile?src=fs#open-reviews-list'
+    # url = f'https://www.avito.ru/brands/{hash_id}'
+    print(url)
     try:
         driver.get(url)
-        time.sleep(random.uniform(2, 10))  # Задержка для полной загрузки страницы
+        time.sleep(random.uniform(2, 4))  # Задержка для полной загрузки страницы
+        # try:
+        #     button = WebDriverWait(driver, 10).until(
+        #         EC.element_to_be_clickable((By.XPATH, "//a[@data-marker='profile/summary']"))
+        #     )
+        #     button.click()
+        #     print("Кнопка найдена и нажата.")
+        #     time.sleep(random.uniform(2, 4))  # Ждем после клика
+        # except Exception as e:
+        #     print(f"Не удалось найти или нажать на кнопку отзывов: {e}")
         for _ in range(3):  # Прокрутить 3 раза
+
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(random.uniform(2, 8))  # Ждем подгрузку
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, "lxml")
-        reviews = soup.select(".style-snippet-E6g8Y")
+        # reviews = soup.select(".style-snippet-E6g8Y")
+        reviews = soup.select(".style-snippet-BzYXq")
         print(f"Найдено отзывов: {len(reviews)}")
         list_reviews = []
         for review in reviews:
@@ -103,11 +123,13 @@ def load_data(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         return json.load(file)
 
+
 def save_data(file_path, data):
     """Сохраняет данные в JSON-файл."""
     with open(file_path, 'w', encoding='utf-8') as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
         print(f"Данные сохранены в {file_path}.")
+
 
 def update_user_data(data, name, reviews):
     """Обновляет или добавляет данные пользователя."""
@@ -120,8 +142,9 @@ def update_user_data(data, name, reviews):
         # Обновление существующих данных (например, добавление новых отзывов)
         data[name]["reviews"] = reviews
 
+
 def main():
-    data_file = 'data_sellers.json'
+    data_file = 'data_sellersddd.json'
     initialize_data_file(data_file)
     data = load_data(data_file)
     driver = initialize_browser()
